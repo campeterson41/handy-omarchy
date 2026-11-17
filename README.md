@@ -48,7 +48,7 @@ Things to know:
 - F9 hold-to-talk is added only when F9 is free. Omarchy binds F9 to Voxtype when Voxtype is installed, so there you get Super+Ctrl+X only unless you pass `--take-f9`.
 - To move the widget later, use the Omarchy bar settings or edit `bar.layout` in `~/.config/omarchy/shell.json`.
 - Shortcuts live in `~/.config/hypr/handy-binds.lua`. Any key, mouse button or script can run `~/.local/bin/handy-toggle`. I use a spare mouse button.
-- Run `handy` to open Handy's own window for the dictionary, microphone and other settings.
+- Run `handy` to open Handy's own window for the microphone and other settings.
 
 ## Optional cleanup
 
@@ -56,12 +56,20 @@ Things to know:
 
 - your OpenRouter key stays in the OS keyring (`secret-tool`), not in a settings file
 - requests only go to zero data retention endpoints, at temperature 0
-- your Handy custom words are sent along as spelling hints
+- your dictionary is sent along as spelling hints
 - the bar widget can tell cleanup from transcription
 
 If cleanup fails or times out, Handy pastes the raw transcript, so you never lose a dictation. The prompt is in [prompts/cleanup.txt](prompts/cleanup.txt) and shows up in Handy under Post Processing as "Dictation cleanup", where you can edit it. It includes a spoken escape hatch: say "transcription instructions", give an editing instruction, then "resume dictation".
 
 With cleanup on, the transcript text is sent to OpenRouter. Audio never is.
+
+### Dictionary
+
+With cleanup on, keep names and terms in `~/.config/handy-omarchy/dictionary.txt`, one per line. The cleanup model uses them as spelling hints and only when you clearly said that name. The installer moves anything already in Handy's Custom Words into this file and empties Handy's list.
+
+Avoid Handy's own Custom Words screen. Parakeet cannot take a vocabulary, so Handy compares every phrase you say against those words and swaps in anything that sounds close enough, before cleanup runs. Multiword entries are the worst. A business name that sounds like an everyday phrase gets pasted whenever you say something close to that phrase, so ordinary sentences come out with names in the middle of them. The bridge still reads words added there, but they turn that swapping back on, so move them to the file.
+
+Without cleanup, Handy's Custom Words is the only dictionary there is. Keep it short and avoid entries that sound like everyday phrases.
 
 ## How it works
 
@@ -79,7 +87,7 @@ key press -> handy-toggle -> Handy records -> Parakeet transcribes -> (cleanup b
 | `bin/handy-paste` | `~/.local/bin/handy-paste` | Terminal-aware paste with clipboard restore. |
 | `share/bar-status.py` | `~/.local/share/handy/` | Follows Handy's journal for recording start and stop, and measures microphone level with `parec` while recording. Audio stays in memory. |
 | `plugin/handy.dictation/` | `~/.config/omarchy/plugins/` | The bar widget. |
-| `share/cleanup-bridge.cjs` | `~/.local/share/handy/` | Optional cleanup bridge. |
+| `share/cleanup-bridge.cjs` | `~/.local/share/handy/` | Optional cleanup bridge. Reads `~/.config/handy-omarchy/dictionary.txt`. |
 | `systemd/*.service` | `~/.config/systemd/user/` | `handy`, `handy-bar`, and optionally `handy-cleanup`. |
 | `scripts/apply-settings.py` | run by the installer | Merges the Handy settings this setup needs and leaves the rest alone. |
 

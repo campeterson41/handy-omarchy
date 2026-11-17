@@ -194,14 +194,16 @@ if ! omarchy-shell handy.dictation status >/dev/null 2>&1; then
   omarchy-restart-shell >/dev/null 2>&1 || echo "Restart the bar to load the widget: omarchy-restart-shell"
 fi
 
+DICT_LINE=""
+[[ $CLEANUP == 1 ]] && DICT_LINE="  Dictionary:               ~/.config/handy-omarchy/dictionary.txt"$'\n'
 cat <<DONE
 
 Done. Press Super+Ctrl+X to start and again to stop$([[ $BINDS == 1 && $F9 == 1 ]] && echo ", or hold F9 and talk").
 A red dot and live waveform appear in the top bar while recording, then a
 spinner until the text is pasted. The widget is hidden when idle.
 
-  Settings and dictionary:  run "handy" (or open Handy from the launcher)
-  Shortcuts:                ~/.config/hypr/handy-binds.lua
+  Settings:                 run "handy" (or open Handy from the launcher)
+${DICT_LINE}  Shortcuts:                ~/.config/hypr/handy-binds.lua
   Logs:                     journalctl --user -u handy -u handy-bar -f
   Remove everything:        ./uninstall.sh
 DONE
