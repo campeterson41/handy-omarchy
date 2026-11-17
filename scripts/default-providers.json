@@ -1,0 +1,74 @@
+[
+ {
+  "allow_base_url_edit": false,
+  "api_format": "openai",
+  "base_url": "https://api.openai.com/v1",
+  "id": "openai",
+  "label": "OpenAI",
+  "models_endpoint": "/models",
+  "supports_structured_output": true
+ },
+ {
+  "allow_base_url_edit": false,
+  "api_format": "openai",
+  "base_url": "https://api.z.ai/api/paas/v4",
+  "id": "zai",
+  "label": "Z.AI",
+  "models_endpoint": "/models",
+  "supports_structured_output": true
+ },
+ {
+  "allow_base_url_edit": false,
+  "api_format": "openai",
+  "base_url": "https://openrouter.ai/api/v1",
+  "id": "openrouter",
+  "label": "OpenRouter",
+  "models_endpoint": "/models",
+  "supports_structured_output": true
+ },
+ {
+  "allow_base_url_edit": false,
+  "api_format": "anthropic",
+  "base_url": "https://api.anthropic.com/v1",
+  "id": "anthropic",
+  "label": "Anthropic",
+  "models_endpoint": "/models",
+  "supports_structured_output": false
+ },
+ {
+  "allow_base_url_edit": false,
+  "api_format": "openai",
+  "base_url": "https://api.groq.com/openai/v1",
+  "id": "groq",
+  "label": "Groq",
+  "models_endpoint": "/models",
+  "supports_structured_output": false
+ },
+ {
+  "allow_base_url_edit": false,
+  "api_format": "openai",
+  "base_url": "https://api.cerebras.ai/v1",
+  "id": "cerebras",
+  "label": "Cerebras",
+  "models_endpoint": "/models",
+  "supports_structured_output": true
+ },
+ {
+  "allow_base_url_edit": false,
+  "api_format": "openai",
+  "base_url": "https://bedrock-mantle.us-east-1.api.aws/v1",
+  "id": "bedrock_mantle",
+  "label": "AWS Bedrock (Mantle)",
+  "models_endpoint": "/models",
+  "supports_structured_output": true
+ },
+ {
+  "allow_base_url_edit": true,
+  "api_format": "openai",
+  "base_url": "http://127.0.0.1:18784/v1",
+  "id": "custom",
+  "label": "Custom",
+  "models_endpoint": "/models",
+  "supports_structured_output": false
+ }
+]

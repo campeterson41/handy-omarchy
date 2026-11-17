@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "handy.dictation",
+  "name": "Dictation",
+  "version": "1.0.0",
+  "author": "Cameron Peterson",
+  "description": "Handy recording dot, live microphone waveform and processing spinner",
+  "kinds": ["bar-widget"],
+  "entryPoints": {"barWidget": "Dictation.qml"},
+  "barWidget": {"displayName": "Dictation", "category": "System", "allowMultiple": false}
+}

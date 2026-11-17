@@ -1,0 +1,14 @@
+[Unit]
+Description=Handy dictation cleanup bridge (loopback only)
+After=graphical-session.target
+Before=handy.service
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/node %h/.local/share/handy/cleanup-bridge.cjs
+Restart=on-failure
+RestartSec=3
+UMask=0077
+
+[Install]
+WantedBy=graphical-session.target

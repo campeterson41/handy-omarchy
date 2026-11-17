@@ -1,0 +1,13 @@
+[Unit]
+Description=Handy recording state and microphone level for the Omarchy bar
+After=handy.service
+PartOf=handy.service
+
+[Service]
+ExecStart=/usr/bin/python3 %h/.local/share/handy/bar-status.py
+Restart=on-failure
+RestartSec=2
+UMask=0077
+
+[Install]
+WantedBy=handy.service

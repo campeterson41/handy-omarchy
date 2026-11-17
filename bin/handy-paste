@@ -1,0 +1,47 @@
+#!/usr/bin/python3 -E
+"""Paste dictation with the active app's shortcut and preserve its clipboard."""
+import fcntl,json,os,subprocess,sys,time
+from pathlib import Path
+
+env=os.environ.copy()
+for key in ('LD_LIBRARY_PATH','LD_PRELOAD','PYTHONHOME','PYTHONPATH'):env.pop(key,None)
+
+def run(args,**kw):
+ return subprocess.run(args,env=env,timeout=kw.pop('timeout',3),**kw)
+def active():
+ return json.loads(run(['/usr/bin/hyprctl','-j','activewindow'],capture_output=True,check=True,text=True).stdout)
+def terminal(app):
+ return any(name in app.lower() for name in ('ghostty','alacritty','foot','kitty','wezterm','konsole','gnome-terminal','xterm','tilix','terminator','ptyxis','rio','warp-terminal'))
+def main():
+ text=sys.argv[1]
+ lock_path=Path(os.environ['XDG_RUNTIME_DIR'])/'handy-paste.lock'
+ with lock_path.open('a') as lock:
+  fcntl.flock(lock,fcntl.LOCK_EX)
+  target=active();app=target.get('class','')
+  if not target.get('address') or (app=='Handy' and target.get('title')=='Recording'):raise RuntimeError('No destination window')
+  types=run(['/usr/bin/wl-paste','--list-types'],capture_output=True,text=True)
+  names=types.stdout.splitlines();mime=next((x for x in names if x.startswith('image/')),None)
+  if mime is None:mime=next((x for x in names if x.startswith('text/plain')),None)
+  if mime is None and names:mime=names[0]
+  saved=run(['/usr/bin/wl-paste','--no-newline','--type',mime],capture_output=True) if mime else None
+  run(['/usr/bin/wl-copy','--type','text/plain;charset=utf-8'],input=text.encode(),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
+  time.sleep(.12)
+  if active().get('address')!=target['address']:raise RuntimeError('Destination changed before paste')
+  args=['/usr/bin/wtype','-M','ctrl']
+  if terminal(app):args+=['-M','shift']
+  args+=['-k','v']
+  if terminal(app):args+=['-m','shift']
+  args+=['-m','ctrl']
+  run(args,capture_output=True,check=True)
+  time.sleep(.5)
+  if saved is not None and saved.returncode==0:
+   run(['/usr/bin/wl-copy','--type',mime],input=saved.stdout,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
+  elif not names:run(['/usr/bin/wl-copy','--clear'],capture_output=True)
+  status={'app':app,'shortcut':'Ctrl+Shift+V' if terminal(app) else 'Ctrl+V','command_succeeded':True,'at':time.time()}
+  (Path(os.environ['XDG_RUNTIME_DIR'])/'handy-last-paste.json').write_text(json.dumps(status))
+if __name__=='__main__':
+ try:main()
+ except Exception as error:
+  import traceback
+  (Path(os.environ['XDG_RUNTIME_DIR'])/'handy-paste-error.txt').write_text(traceback.format_exc())
+  sys.exit(1)

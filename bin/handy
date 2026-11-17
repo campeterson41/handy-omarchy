@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Launcher for the extracted Handy AppImage.
+# When a toggle is sent, tell the bar widget first so it can switch to the
+# spinner right away instead of waiting for Handy to report the stop.
+for arg in "$@"; do
+  if [[ "$arg" == "--toggle-post-process" || "$arg" == "--toggle-transcription" ]]; then
+    /usr/bin/env -u LD_LIBRARY_PATH -u LD_PRELOAD omarchy-shell -q handy.dictation stopRequested >/dev/null 2>&1
+    break
+  fi
+done
+exec "$HOME/.local/share/handy/squashfs-root/AppRun" "$@"
