@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Merge this setup's Handy settings into settings_store.json.
 
-Only the keys listed here are changed. Everything else (dictionary, history
-settings, microphone choice, your own prompts) is left alone. Run while Handy
+Only the keys listed here are changed. Everything else (history settings,
+microphone choice, your own prompts) is left alone. With cleanup on, Handy's
+custom words move to the cleanup dictionary file (see below). Run while Handy
 is stopped, otherwise Handy overwrites the file on exit.
 """
 import argparse, json, os, shutil, time
@@ -13,6 +14,7 @@ ap.add_argument('--cleanup-model', default='', help='OpenRouter model id; empty 
 ap.add_argument('--port', type=int, default=18784)
 ap.add_argument('--model-id', required=True)
 ap.add_argument('--settings', default=str(Path.home() / '.local/share/com.pais.handy/settings_store.json'))
+ap.add_argument('--dictionary', default=str(Path.home() / '.config/handy-omarchy/dictionary.txt'))
 args = ap.parse_args()
 
 here = Path(__file__).resolve().parent
@@ -58,6 +60,26 @@ if args.cleanup_model:
     s['post_process_selected_prompt_id'] = 'handy_omarchy_cleanup'
     s['post_process_provider_id'] = 'custom'
     s['post_process_enabled'] = True
+
+    # Move Handy's custom words into the cleanup bridge's dictionary file. Parakeet cannot take
+    # a vocabulary, so Handy fuzzy-matches every phrase against custom words and swaps in
+    # anything close enough, so a name that sounds like an everyday phrase replaces it. The cleanup
+    # model gets the file as spelling hints and only uses an entry when it was clearly said.
+    dictionary = Path(args.dictionary)
+    words = [w for w in (s.get('custom_words') or []) if w.strip()]
+    existing = dictionary.read_text().splitlines() if dictionary.exists() else []
+    new = [w for w in words if w not in {line.strip() for line in existing}]
+    if new or not dictionary.exists():
+        dictionary.parent.mkdir(parents=True, exist_ok=True)
+        header = [] if existing else [
+            '# One word or phrase per line. Sent to the cleanup model as spelling hints.',
+            '# Add words here, not in Handy\'s Custom Words, which swaps in look-alike words.',
+        ]
+        dictionary.write_text('\n'.join(existing + header + new) + '\n')
+        os.chmod(dictionary, 0o600)
+    if words:
+        print(f'Moved {len(words)} Handy custom words to {dictionary}')
+    s['custom_words'] = []
 
 tmp = path.with_name(path.name + '.tmp')
 tmp.write_text(json.dumps(store, indent=2))

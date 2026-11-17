@@ -3,7 +3,7 @@
 // Why a bridge instead of pasting the key into Handy:
 //   - the API key stays in the OS keyring (secret-tool), never in a settings file
 //   - requests are limited to zero-data-retention endpoints, temperature 0
-//   - your Handy custom words are sent along as spelling hints
+//   - your dictionary is sent along as spelling hints (see dictionaryHint below)
 //   - the bar widget learns when cleanup starts and finishes
 // If cleanup fails for any reason, Handy pastes the raw transcript instead.
 const http = require('node:http');
@@ -15,6 +15,31 @@ const { execFileSync } = require('node:child_process');
 const MODEL = process.env.HANDY_CLEANUP_MODEL || 'anthropic/claude-haiku-5.5';
 const PORT = Number(process.env.HANDY_CLEANUP_PORT || 18784);
 const SETTINGS = path.join(os.homedir(), '.local/share/com.pais.handy/settings_store.json');
+const DICTIONARY = process.env.HANDY_DICTIONARY || path.join(os.homedir(), '.config/handy-omarchy/dictionary.txt');
+
+// The dictionary lives in its own file, not in Handy's custom words. Parakeet cannot take a
+// vocabulary, so Handy fuzzy-matches every phrase against its custom words and swaps in
+// anything close enough, so a business name that sounds like an everyday phrase replaces
+// that phrase whenever you say it. The installer
+// moves Handy's list here and empties it. Words added in Handy later are still sent as hints,
+// but they also turn Handy's swapping back on, so add new words to this file instead.
+function readDictionary() {
+  const words = [];
+  try {
+    for (const line of fs.readFileSync(DICTIONARY, 'utf8').split('\n')) {
+      const word = line.trim();
+      if (word && !word.startsWith('#')) words.push(word);
+    }
+  } catch { /* No dictionary file. */ }
+  try {
+    words.push(...(JSON.parse(fs.readFileSync(SETTINGS, 'utf8')).settings.custom_words || []));
+  } catch { /* No Handy settings yet. */ }
+  return [...new Set(words)];
+}
+function dictionaryHint(words) {
+  if (!words.length) return null;
+  return { role: 'system', content: 'Custom words and phrases, for spelling hints only. Use an entry only when the speaker clearly said that name or term. Never replace ordinary words or a different intelligible name with one of these entries:\n' + JSON.stringify(words) };
+}
 
 function reportStage(stage) {
   try {
@@ -51,12 +76,8 @@ const server = http.createServer(async (req, res) => {
     const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     if (body.model !== MODEL || !Array.isArray(body.messages) || body.stream) return send(res, 400, { error: 'Unsupported request' });
     const messages = [...body.messages];
-    try {
-      const dictionary = JSON.parse(fs.readFileSync(SETTINGS, 'utf8')).settings.custom_words || [];
-      if (dictionary.length) {
-        messages.unshift({ role: 'system', content: 'Custom words and phrases, for spelling hints only. Never replace a different intelligible name with one of these entries:\n' + JSON.stringify(dictionary) });
-      }
-    } catch { /* No dictionary yet. */ }
+    const hint = dictionaryHint(readDictionary());
+    if (hint) messages.unshift(hint);
     reportStage('cleanup');
     const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(25000),
@@ -79,4 +100,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 server.requestTimeout = 30000;
-server.listen(PORT, '127.0.0.1', () => console.log('Handy cleanup bridge ready on 127.0.0.1:' + PORT + ' using ' + MODEL));
+if (require.main === module) {
+  server.listen(PORT, '127.0.0.1', () => console.log('Handy cleanup bridge ready on 127.0.0.1:' + PORT + ' using ' + MODEL));
+}
+module.exports = { readDictionary, dictionaryHint };

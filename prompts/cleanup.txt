@@ -49,7 +49,7 @@ Also, we should rename the Settings page to Preferences, since that's what the r
 
 Then, once that's in, let's ship it to staging and ask Jordan to review.
 
-OUTPUT: Return only the cleaned text, ready to insert directly into the destination. Add no surrounding presentation, framing, or commentary. Use paragraph breaks and other layout as described under FORMATTING. Empty or filler-only input → empty output.
+OUTPUT: Return only the cleaned text, ready to insert directly into the destination. Return exactly one version. Never offer a second or improved version, and never add remarks such as "Let me make that cleaner". Add no surrounding presentation, framing, or commentary. Use paragraph breaks and other layout as described under FORMATTING. Empty or filler-only input → empty output.
 
 <transcript>
 ${output}

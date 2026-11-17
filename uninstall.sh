@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Remove everything install.sh added. Your Handy data (dictionary, history, model)
-# is kept unless you pass --purge.
+# Remove everything install.sh added. Your Handy data (history, model) and the
+# cleanup dictionary are kept unless you pass --purge.
 set -euo pipefail
 PURGE=0; [[ "${1:-}" == "--purge" ]] && PURGE=1
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,10 +29,10 @@ rm -f "${XDG_RUNTIME_DIR:-/nonexistent}"/handy-bar.json "${XDG_RUNTIME_DIR:-/non
       "${XDG_RUNTIME_DIR:-/nonexistent}"/handy-last-paste.json "${XDG_RUNTIME_DIR:-/nonexistent}"/handy-paste.lock
 
 if [[ $PURGE == 1 ]]; then
-  rm -rf "$HOME/.local/share/com.pais.handy"
+  rm -rf "$HOME/.local/share/com.pais.handy" "$HOME/.config/handy-omarchy"
   secret-tool clear service handy-omarchy account openrouter 2>/dev/null || true
-  echo "Removed Handy, its data, the model and the stored API key."
+  echo "Removed Handy, its data, the model, the cleanup dictionary and the stored API key."
 else
-  echo "Removed Handy and the bar widget. Kept ~/.local/share/com.pais.handy (dictionary, history, model)."
+  echo "Removed Handy and the bar widget. Kept ~/.local/share/com.pais.handy (history, model) and ~/.config/handy-omarchy (cleanup dictionary)."
   echo "Run ./uninstall.sh --purge to remove that and the stored API key too."
 fi
